@@ -54,4 +54,15 @@ class DB {
 
     return null;
   }
+
+  static Future<void> updateProduct(String code, String name, int price) async {
+    final db = await database;
+
+    await db.update(
+      'products',
+      {'name': name, 'price': price},
+      where: 'code = ?',
+      whereArgs: [code],
+    );
+  }
 }

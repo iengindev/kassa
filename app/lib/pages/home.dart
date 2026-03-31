@@ -12,8 +12,9 @@ class Product {
 
 class CartItem {
   final Product product;
+  final String code;
 
-  CartItem(this.product);
+  CartItem(this.product, this.code);
 }
 
 class HomePage extends StatefulWidget {
@@ -42,7 +43,7 @@ class HomePageState extends State<HomePage> {
       final item = Product(product['name'], product['price']);
 
       setState(() {
-        cart.add(CartItem(item));
+        cart.add(CartItem(item, code));
       });
     } else {
       openAddProductDialog(code);
@@ -85,11 +86,66 @@ class HomePageState extends State<HomePage> {
 
                 await DB.insertProduct(code, name, price);
 
-                setState(() {
-                  cart.add(CartItem(Product(name, price)));
-                });
+                if (mounted && name.isNotEmpty && price > 0) {
+                  setState(() {
+                    cart.add(CartItem(Product(name, price), code));
+                  });
 
-                Navigator.pop(context);
+                  Navigator.pop(context);
+                }
+              },
+              child: Text("Сохранить"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void openEditProductDialog(String code, Product product) {
+    final nameController = TextEditingController(text: product.name);
+    final priceController = TextEditingController(
+      text: product.price.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: Text("Редактировать товар"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Штрих-код: $code"),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: "Название"),
+              ),
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: "Цена"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final name = nameController.text;
+                final price = int.tryParse(priceController.text) ?? 0;
+
+                await DB.updateProduct(code, name, price);
+
+                if (mounted && name.isNotEmpty && price > 0) {
+                  setState(() {
+                    final index = cart.indexWhere((item) => item.code == code);
+                    if (index != -1) {
+                      cart[index] = CartItem(Product(name, price), code);
+                    }
+                  });
+
+                  Navigator.pop(context);
+                }
               },
               child: Text("Сохранить"),
             ),
@@ -134,6 +190,9 @@ class HomePageState extends State<HomePage> {
                 return ListTile(
                   title: Text(item.product.name),
                   trailing: Text("${item.product.price} ₸"),
+                  onLongPress: () {
+                    openEditProductDialog(item.code, item.product);
+                  },
                 );
               },
             ),
