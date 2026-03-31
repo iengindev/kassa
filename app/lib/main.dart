@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:kassa/pages/home.dart';
+
 void main() {
   runApp(const Kassa());
 }
@@ -9,6 +11,6 @@ class Kassa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false);
+    return MaterialApp(debugShowCheckedModeBanner: false, home: HomePage());
   }
 }
